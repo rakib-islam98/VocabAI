@@ -1,0 +1,97 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String @id @default(cuid())
+  name     String
+  email    String @unique
+  password String
+
+  userWords UserWord[]
+  reviews   Review[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Vocabulary {
+  id String @id @default(cuid())
+
+  word String
+
+  meaning         String
+  hinglishMeaning String?
+  exampleSentence String?
+
+  userWords UserWord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([word, meaning])
+  @@index([word])
+}
+
+model UserWord {
+  id String @id @default(cuid())
+
+  sourceSentence String?
+
+  easeFactor      Float @default(2.5)
+  intervalDays    Int   @default(1)
+  repetitionCount Int   @default(0)
+
+  nextReviewDate DateTime  @default(now())
+  lastReviewedAt DateTime?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  vocabularyId String
+  vocabulary   Vocabulary @relation(fields: [vocabularyId], references: [id], onDelete: Cascade)
+
+  reviews Review[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, vocabularyId])
+  @@index([userId])
+  @@index([vocabularyId])
+  @@index([nextReviewDate])
+}
+
+model Review {
+  id String @id @default(cuid())
+
+  quality Int
+
+  previousEF Float
+  newEF      Float
+
+  previousInterval Int
+  newInterval      Int
+
+  reviewedAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  userWordId String
+  userWord   UserWord @relation(fields: [userWordId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userWordId])
+}

@@ -1,6 +1,10 @@
 import express from "express";
 
 import healthRoutes from "./health.routes.js";
+import testRoutes from "./test.routes.js";
+import authRoutes from "./auth.routes.js";
+
+import vocabularyRoutes from "../modules/vocabulary/vocabulary.routes.js"
 
 const router = express.Router();
 
@@ -11,5 +15,8 @@ const router = express.Router();
 */
 
 router.use("/health", healthRoutes);
+router.use("/test", testRoutes);
+router.use("/auth", authRoutes);
+router.use("/vocabulary", vocabularyRoutes);
 
 export default router;

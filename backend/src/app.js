@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
 
 import notFoundMiddleware from "./middlewares/notFound.middleware.js";
 import errorMiddleware from "./middlewares/error.middleware.js"
@@ -27,6 +28,7 @@ app.use(morgan("dev"));
 
 app.use(express.json());  //this allow express to use JSON.stringfy(JS Object) and JSON.parse(SSON String) whenever needed 
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 /*
 |--------------------------------------------------------------------------
