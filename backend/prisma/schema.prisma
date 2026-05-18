@@ -27,21 +27,31 @@ model User {
 }
 
 model Vocabulary {
+
   id String @id @default(cuid())
 
   word String
 
-  meaning         String
-  hinglishMeaning String?
-  exampleSentence String?
+  partOfSpeech String
+
+  hindiMeaning String
+
+  hinglishExplanation String
+
+  example String
+
+  imagePrompt String
 
   userWords UserWord[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([word, meaning])
+  @@unique([word, partOfSpeech, hindiMeaning])
+
   @@index([word])
+
+  @@index([partOfSpeech])
 }
 
 model UserWord {

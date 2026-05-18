@@ -1,9 +1,20 @@
 export const validateAddVocabulary = (data) => {
-  const { word, meaning } = data;
 
-  if (!word || !meaning) {
-    return "Word and meaning are required";
-  }
+    const {
+        word,
+        sourceSentence,
+    } = data;
 
-  return null;
+    if (!word?.trim()) {
+        return "Word is required";
+    }
+
+    if (
+        sourceSentence &&
+        typeof sourceSentence !== "string"
+    ) {
+        return "Source sentence must be a string";
+    }
+
+    return null;
 };

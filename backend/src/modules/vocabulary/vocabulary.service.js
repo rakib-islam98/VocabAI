@@ -1,86 +1,145 @@
 import prisma from "../../config/prisma.js";
 
-export const addVocabularyService = async (userId, data) => {
-  const { word, meaning, hinglishMeaning, exampleSentence, sourceSentence } =
-    data;
+import ApiError from "../../utils/ApiError.js";
 
-  // Step 1: Check existing vocabulary
-  let vocabulary = await prisma.vocabulary.findFirst({
-    where: {
-      word,
-      meaning,
-    },
-  });
+import { generateVocabularyEnrichment }
+from "../ai/enrichment.service.js";
 
-  // Step 2: Create if not exists
-  if (!vocabulary) {
-    vocabulary = await prisma.vocabulary.create({
-      data: {
+export const addVocabularyService = async (
+    userId,
+    data
+) => {
+
+    let {
         word,
-        meaning,
-        hinglishMeaning,
-        exampleSentence,
-      },
-    });
-  }
+        sourceSentence,
+    } = data;
 
-  //check for duplicate
-  const existingUserWord = await prisma.userWord.findFirst({
-    where: {
-      userId,
-      vocabularyId: vocabulary.id,
-    },
-  });
+    word = word.toLowerCase().trim();
 
-  if (existingUserWord) {
-    throw new ApiError(409, "Vocabulary already saved");
-  }
+    // Generate AI enrichment
 
-  // Step 3: Create UserWord
-  const userWord = await prisma.userWord.create({
-    data: {
-      userId,
-      vocabularyId: vocabulary.id,
-      sourceSentence,
-    },
-  });
+    const enrichment =
+        await generateVocabularyEnrichment({
+            word,
+            sourceSentence,
+        });
 
-  return userWord;
+    const {
+        partOfSpeech,
+        hindiMeaning,
+        hinglishExplanation,
+        example,
+        imagePrompt,
+    } = enrichment;
+
+    // Check existing contextual vocabulary
+
+    let vocabulary =
+        await prisma.vocabulary.findFirst({
+            where: {
+                word,
+                partOfSpeech,
+                hindiMeaning,
+            },
+        });
+
+    // Create vocabulary if not exists
+
+    if (!vocabulary) {
+
+        vocabulary =
+            await prisma.vocabulary.create({
+                data: {
+                    word,
+                    partOfSpeech,
+                    hindiMeaning,
+                    hinglishExplanation,
+                    example,
+                    imagePrompt,
+                },
+            });
+    }
+
+    // Prevent duplicate save for same user
+
+    const existingUserWord =
+        await prisma.userWord.findFirst({
+            where: {
+                userId,
+                vocabularyId: vocabulary.id,
+            },
+        });
+
+    if (existingUserWord) {
+
+        throw new ApiError(
+            409,
+            "Vocabulary already saved"
+        );
+    }
+
+    // Create UserWord
+
+    const userWord =
+        await prisma.userWord.create({
+            data: {
+                userId,
+                vocabularyId: vocabulary.id,
+                sourceSentence,
+            },
+
+            include: {
+                vocabulary: true,
+            },
+        });
+
+    return userWord;
 };
 
-export const getUserVocabularyService = async (userId, page, limit, skip) => {
-  const [userWords, total] = await Promise.all([
-    prisma.userWord.findMany({
-      where: {
-        userId,
-      },
+export const getUserVocabularyService = async (
+    userId,
+    page,
+    limit,
+    skip
+) => {
 
-      include: {
-        vocabulary: true,
-      },
+    const [userWords, total] =
+        await Promise.all([
 
-      orderBy: {
-        createdAt: "desc",
-      },
+            prisma.userWord.findMany({
+                where: {
+                    userId,
+                },
 
-      skip,
-      take: limit,
-    }),
+                include: {
+                    vocabulary: true,
+                },
 
-    prisma.userWord.count({
-      where: {
-        userId,
-      },
-    }),
-  ]);
+                orderBy: {
+                    createdAt: "desc",
+                },
 
-  return {
-    userWords,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
+                skip,
+                take: limit,
+            }),
+
+            prisma.userWord.count({
+                where: {
+                    userId,
+                },
+            }),
+        ]);
+
+    return {
+        userWords,
+
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages:
+                Math.ceil(total / limit),
+        },
+    };
 };

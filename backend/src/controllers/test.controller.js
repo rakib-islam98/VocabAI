@@ -1,6 +1,8 @@
 import { testDatabase, protectedTestService } from "../services/test.service.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
+import { generateVocabularyEnrichment } from "../modules/ai/enrichment.service.js";
+
 const testController = asyncHandler(async(req, res)=>{
     const users = await testDatabase();
 
@@ -19,6 +21,16 @@ const protectedTestController = asyncHandler(
     }
 );
 
+const generateAITestController = asyncHandler(
+    async (req, res) => {
+        const result = await generateVocabularyEnrichment({
+            word: "book",
+            sourceSentence: "She forgot to book hotel rooms for guest."
+        });
+        return res.status(200).json(result);
+    }
+);
+
 export {
-    testController, protectedTestController
+    testController, protectedTestController, generateAITestController
 }

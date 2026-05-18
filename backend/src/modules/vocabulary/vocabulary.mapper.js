@@ -1,16 +1,40 @@
-export const mapUserVocabulary = (userWord) => {
-  return {
-    id: userWord.id,
+export const mapUserVocabulary = (
+    userWord
+) => {
 
-    word: userWord.vocabulary.word,
-    meaning: userWord.vocabulary.meaning,
-    hinglishMeaning: userWord.vocabulary.hinglishMeaning,
-    exampleSentence: userWord.vocabulary.exampleSentence,
+    return {
 
-    sourceSentence: userWord.sourceSentence,
+        id: userWord.id,
 
-    easeFactor: userWord.easeFactor,
-    repetitionCount: userWord.repetitionCount,
-    nextReviewDate: userWord.nextReviewDate,
-  };
+        word:
+            userWord.vocabulary.word,
+
+        partOfSpeech:
+            userWord.vocabulary.partOfSpeech,
+
+        hindiMeaning:
+            userWord.vocabulary.hindiMeaning,
+
+        hinglishExplanation:
+            userWord.vocabulary
+                .hinglishExplanation,
+
+        example:
+            userWord.vocabulary.example,
+
+        imagePrompt:
+            userWord.vocabulary.imagePrompt,
+
+        sourceSentence:
+            userWord.sourceSentence,
+
+        easeFactor:
+            userWord.easeFactor,
+
+        repetitionCount:
+            userWord.repetitionCount,
+
+        nextReviewDate:
+            userWord.nextReviewDate,
+    };
 };
