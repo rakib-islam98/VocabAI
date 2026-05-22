@@ -42,6 +42,8 @@ model Vocabulary {
 
   imagePrompt String
 
+  imageUrl String?
+
   userWords UserWord[]
 
   createdAt DateTime @default(now())

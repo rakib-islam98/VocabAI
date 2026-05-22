@@ -4,6 +4,7 @@ import { getPagination } from "../../utils/pagination.js";
 import {
   addVocabularyService,
   getUserVocabularyService,
+  deleteVocabularyService,
 } from "./vocabulary.service.js";
 import { validateAddVocabulary } from "./vocabulary.validation.js";
 import { mapUserVocabulary } from "./vocabulary.mapper.js";
@@ -45,4 +46,16 @@ export const getUserVocabularyController = asyncHandler(async (req, res) => {
 
     data: userWords.map(mapUserVocabulary),
   });
+});
+
+export const deleteVocabularyController = asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    const userWordId = req.params.id;
+
+    await deleteVocabularyService(userId, userWordId);
+
+    res.status(200).json({
+        success: true,
+        message: "Vocabulary deleted successfully"
+    });
 });

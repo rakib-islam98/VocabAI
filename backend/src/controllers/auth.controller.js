@@ -1,5 +1,5 @@
 import asyncHandler from "../utils/asyncHandler.js";
-import { registerService, loginService, logoutService } from "../services/auth.service.js";
+import { registerService, loginService, logoutService, getUserService } from "../services/auth.service.js";
 
 export const registerUser = asyncHandler(async (req, res) => {
 
@@ -51,4 +51,14 @@ export const logoutUser = asyncHandler(async (req, res) => {
     });
 
     return res.status(200).json(result);
+});
+
+export const getUser = asyncHandler(async (req, res) => {
+
+    const user = await getUserService(req.user.id);
+
+    return res.status(200).json({
+        success: true,
+        data: user
+    });
 });

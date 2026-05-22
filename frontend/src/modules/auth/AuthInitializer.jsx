@@ -1,4 +1,4 @@
-import useInitializeAuth from "./useInitializeAuth";
+import useInitializeAuth from ".//hooks/useInitializeAuth";
 
 export default function AuthInitializer({ children }) {
   useInitializeAuth();

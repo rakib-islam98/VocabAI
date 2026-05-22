@@ -25,6 +25,9 @@ export const mapUserVocabulary = (
         imagePrompt:
             userWord.vocabulary.imagePrompt,
 
+        imageUrl:
+            userWord.vocabulary.imageUrl,
+
         sourceSentence:
             userWord.sourceSentence,
 

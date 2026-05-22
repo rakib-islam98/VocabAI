@@ -1,24 +1,51 @@
+import { useNavigate, Link } from "react-router-dom";
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import AuthLayout from "../layouts/AuthLayout";
+import AuthLayout from "../../../layouts/AuthLayout";
 
-import Input from "../components/ui/Input";
-import Button from "../components/ui/Button";
+import Input from "../../../components/ui/Input";
+import Button from "../../../components/ui/Button";
 
-import { registerSchema } from "../modules/auth/auth.validation";
+import { registerSchema } from "../auth.validation";
+
+import useAuthStore from "../../../store/authStore";
+
+import { useRegisterMutation } from "../hooks/useAuthMutations";
+
+import toast from "react-hot-toast";
 
 export default function RegisterPage() {
+  const navigate = useNavigate();
+
+  const setUser = useAuthStore((state) => state.setUser);
+
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm({
     resolver: zodResolver(registerSchema),
   });
 
+  const registerMutation = useRegisterMutation();
+
   const onSubmit = async (data) => {
-    console.log(data);
+    try {
+      const user = await registerMutation.mutateAsync(data);
+
+      setUser(user);
+
+      toast.success("Account created successfully");
+
+      navigate("/");
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+        "Registration failed"
+      );
+    }
   };
 
   return (
@@ -64,11 +91,21 @@ export default function RegisterPage() {
 
           <Button
             type="submit"
-            loading={isSubmitting}
+            loading={registerMutation.isPending}
           >
             Create Account
           </Button>
         </div>
+
+        <p className="text-sm text-gray-600">
+          Already have an account?{" "}
+          <Link
+            to="/login"
+            className="text-black font-medium"
+          >
+            Login
+          </Link>
+        </p>
       </form>
     </AuthLayout>
   );

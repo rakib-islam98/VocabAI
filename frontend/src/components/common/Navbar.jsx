@@ -9,6 +9,14 @@ export default function Navbar() {
 
   return (
     <nav className="h-16 flex items-center justify-between">
+      <Link to="/add-word">
+        Add Word
+      </Link>
+
+      <Link to="/vocabulary">
+        Vocabulary
+      </Link>
+
       <Link
         to="/"
         className="text-xl font-semibold"

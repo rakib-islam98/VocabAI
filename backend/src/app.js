@@ -20,7 +20,8 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin: "*",
+    origin: "http://localhost:5173",
+    credentials: true,
   })
 );
 
