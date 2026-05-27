@@ -46,7 +46,7 @@ export default function LoginPage() {
 
   return (
     <AuthLayout>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form  autoComplete="on" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
           <h1 className="text-3xl font-semibold">Welcome Back</h1>
 
@@ -57,16 +57,20 @@ export default function LoginPage() {
 
         <div className="space-y-4">
           <Input
+            id="email"
             label="Email"
             type="email"
+            autoComplete="email"
             placeholder="Enter your email"
             error={errors.email?.message}
             {...register("email")}
           />
 
           <Input
+            id="password"
             label="Password"
             type="password"
+            autoComplete="current-password"
             placeholder="Enter your password"
             error={errors.password?.message}
             {...register("password")}

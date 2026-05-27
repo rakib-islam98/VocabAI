@@ -1,17 +1,19 @@
 export default function Input({
   label,
   error,
+  id,
   ...props
 }) {
   return (
     <div className="space-y-2">
       {label && (
-        <label className="text-sm font-medium text-gray-700">
+        <label htmlFor={id} className="text-sm font-medium text-gray-700">
           {label}
         </label>
       )}
 
       <input
+        id={id}
         {...props}
         className="
           w-full

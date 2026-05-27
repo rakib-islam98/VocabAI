@@ -2,7 +2,9 @@ import prisma from "../../config/prisma.js";
 
 import ApiError from "../../utils/ApiError.js";
 
-import { generateVocabularyEnrichment } from "../ai/enrichment.service.js";
+import { generateVocabularyEnrichment } from "../ai/enrichment/enrichment.service.js";
+
+import { uploadGeneratedImage } from "./utils/uploadGeneratedImage.js";
 
 export const addVocabularyService = async (userId, data) => {
   let { word, sourceSentence } = data;
@@ -32,21 +34,20 @@ export const addVocabularyService = async (userId, data) => {
 
   const visualPrompt = `flat vector illustration educational app style ${cleanedImagePrompt}`;
 
-  const imageUrl = `https://image.pollinations.ai/p/${encodeURIComponent(
+  const pollinationsImageUrl = `https://image.pollinations.ai/p/${encodeURIComponent(
     visualPrompt,
   )}?seed=${encodeURIComponent(word)}&width=640&height=480&nologo=true`;
 
-  //image warm up
-  try {
-    await Promise.race([
-      fetch(imageUrl),
+  //save image to cloudinary
+  let savedImageUrl = null;
 
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Image warmup timeout")), 5000),
-      ),
-    ]);
+  try {
+    savedImageUrl = await uploadGeneratedImage({
+      imageUrl: pollinationsImageUrl,
+      word,
+    });
   } catch (error) {
-    console.error("Image warmup failed:", error.message);
+    console.error("Cloudinary upload failed:", error.message);
   }
 
   // Check existing contextual vocabulary
@@ -70,7 +71,8 @@ export const addVocabularyService = async (userId, data) => {
         hinglishExplanation,
         example,
         imagePrompt,
-        imageUrl,
+        imageUrl: savedImageUrl || null,
+        pendingImageUrl: savedImageUrl ? null : pollinationsImageUrl,
       },
     });
   }
@@ -144,20 +146,94 @@ export const getUserVocabularyService = async (userId, page, limit, skip) => {
 };
 
 export const deleteVocabularyService = async (userId, userWordId) => {
-  const existingUserWord = await prisma.userWord.findFirst({
+  await prisma.$transaction(async (tx) => {
+    /*
+        ========================
+        VERIFY OWNERSHIP
+        ========================
+        */
+
+    const existingUserWord = await tx.userWord.findFirst({
+      where: {
+        id: userWordId,
+        userId,
+      },
+    });
+
+    if (!existingUserWord) {
+      throw new ApiError(404, "Vocabulary not found");
+    }
+
+    /*
+        ========================
+        DELETE USER WORD
+        ========================
+        */
+
+    await tx.userWord.delete({
+      where: {
+        id: userWordId,
+      },
+    });
+
+    /*
+        ========================
+        INVALIDATE ACTIVE SESSIONS
+        ========================
+        */
+
+    await tx.reviewSession.deleteMany({
+      where: {
+        userId,
+        status: "active",
+      },
+    });
+  });
+};
+
+export const retryPendingVocabularyImagesService = async () => {
+  const pendingVocabularies = await prisma.vocabulary.findMany({
     where: {
-      id: userWordId,
-      userId,
+      pendingImageUrl: {
+        not: null,
+      },
     },
   });
 
-  if (!existingUserWord) {
-    throw new ApiError(404, "Vocabulary not found");
+  const results = [];
+
+  for (const vocabulary of pendingVocabularies) {
+    try {
+      const savedImageUrl = await uploadGeneratedImage({
+        imageUrl: vocabulary.pendingImageUrl,
+        word: vocabulary.word,
+      });
+
+      await prisma.vocabulary.update({
+        where: {
+          id: vocabulary.id,
+        },
+
+        data: {
+          imageUrl: savedImageUrl,
+          pendingImageUrl: null,
+        },
+      });
+
+      results.push({
+        word: vocabulary.word,
+        success: true,
+      });
+    } catch (error) {
+      console.error(`Retry failed for ${vocabulary.word}:`, error.message);
+
+      results.push({
+        word: vocabulary.word,
+        success: false,
+        error: error.message,
+      });
+    }
   }
 
-  await prisma.userWord.delete({
-    where: {
-      id: userWordId,
-    },
-  });
+  return results;
 };

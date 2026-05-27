@@ -1,7 +1,5 @@
-// This is your Prisma schema file,
+// This is your Prisma schema file
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
   provider = "prisma-client-js"
@@ -19,30 +17,26 @@ model User {
   email    String @unique
   password String
 
-  userWords UserWord[]
-  reviews   Review[]
+  userWords      UserWord[]
+  reviewSessions ReviewSession[]
+  reviewAttempts ReviewAttempt[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Vocabulary {
-
   id String @id @default(cuid())
 
-  word String
-
-  partOfSpeech String
-
-  hindiMeaning String
-
+  word                String
+  partOfSpeech        String
+  hindiMeaning        String
   hinglishExplanation String
+  example             String
 
-  example String
-
-  imagePrompt String
-
-  imageUrl String?
+  imagePrompt     String
+  imageUrl        String?
+  pendingImageUrl String?
 
   userWords UserWord[]
 
@@ -50,9 +44,7 @@ model Vocabulary {
   updatedAt DateTime @updatedAt
 
   @@unique([word, partOfSpeech, hindiMeaning])
-
   @@index([word])
-
   @@index([partOfSpeech])
 }
 
@@ -61,12 +53,15 @@ model UserWord {
 
   sourceSentence String?
 
-  easeFactor      Float @default(2.5)
-  intervalDays    Int   @default(1)
-  repetitionCount Int   @default(0)
+  masteryScore Float @default(50)
 
-  nextReviewDate DateTime  @default(now())
-  lastReviewedAt DateTime?
+  correctAttempts Int @default(0)
+  wrongAttempts   Int @default(0)
+
+  difficultyBucket String @default("medium")
+  // weak | medium | strong
+
+  lastPracticedAt DateTime?
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -74,7 +69,7 @@ model UserWord {
   vocabularyId String
   vocabulary   Vocabulary @relation(fields: [vocabularyId], references: [id], onDelete: Cascade)
 
-  reviews Review[]
+  reviewAttempts ReviewAttempt[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -82,28 +77,61 @@ model UserWord {
   @@unique([userId, vocabularyId])
   @@index([userId])
   @@index([vocabularyId])
-  @@index([nextReviewDate])
+  @@index([difficultyBucket])
 }
 
-model Review {
+model ReviewSession {
   id String @id @default(cuid())
 
-  quality Int
+  status String @default("active")
+  // active | completed
 
-  previousEF Float
-  newEF      Float
+  totalExercises Int
 
-  previousInterval Int
-  newInterval      Int
+  exercises Json
 
-  reviewedAt DateTime @default(now())
+  answers Json?
+
+  score Float?
+
+  startedAt   DateTime?
+  submittedAt DateTime?
+  completedAt DateTime?
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  reviewAttempts ReviewAttempt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model ReviewAttempt {
+  id String @id @default(cuid())
+
+  exerciseType String
+
+  selectedAnswer String?
+  correctAnswer  String
+
+  wasCorrect Boolean
+
   userWordId String
   userWord   UserWord @relation(fields: [userWordId], references: [id], onDelete: Cascade)
 
+  reviewSessionId String
+  reviewSession   ReviewSession @relation(fields: [reviewSessionId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
   @@index([userId])
   @@index([userWordId])
+  @@index([reviewSessionId])
 }

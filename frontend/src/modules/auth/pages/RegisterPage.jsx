@@ -51,6 +51,7 @@ export default function RegisterPage() {
   return (
     <AuthLayout>
       <form
+        autoComplete="on"
         onSubmit={handleSubmit(onSubmit)}
         className="space-y-6"
       >
@@ -66,24 +67,30 @@ export default function RegisterPage() {
 
         <div className="space-y-4">
           <Input
+            id="name"
             label="Name"
             type="text"
+            autoComplete="name"
             placeholder="Enter your name"
             error={errors.name?.message}
             {...register("name")}
           />
 
           <Input
+            id="email"
             label="Email"
             type="email"
+            autoComplete="email"
             placeholder="Enter your email"
             error={errors.email?.message}
             {...register("email")}
           />
 
           <Input
+            id="password"
             label="Password"
             type="password"
+            autoComplete="new-password"
             placeholder="Enter your password"
             error={errors.password?.message}
             {...register("password")}

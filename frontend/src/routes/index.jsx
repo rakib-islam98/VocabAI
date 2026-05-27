@@ -1,56 +1,65 @@
-import {
-  createBrowserRouter,
-  Navigate,
-} from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 
 import LoginPage from "../modules/auth/pages/LoginPage";
 import RegisterPage from "../modules/auth/pages/RegisterPage";
 
 import VocabularyPage from "../modules/vocabulary/pages/VocabularyPage";
 
+import ReviewPage from "../modules/review/pages/ReviewPage";
+
 import ProtectedRoute from "./ProtectedRoute";
 import GuestRoute from "./GuestRoute";
 
-export const router =
-  createBrowserRouter([
-    {
-      path: "/",
+import AppLayout from "../layouts/AppLayout";
 
-      element: (
-        <Navigate
-          to="/vocabulary"
-          replace
-        />
-      ),
-    },
+export const router = createBrowserRouter([
+  {
+    path: "/",
 
-    {
-      path: "/vocabulary",
+    element: <Navigate to="/vocabulary" replace />,
+  },
 
-      element: (
-        <ProtectedRoute>
+  {
+    path: "/vocabulary",
+
+    element: (
+      <ProtectedRoute>
+        <AppLayout>
           <VocabularyPage />
-        </ProtectedRoute>
-      ),
-    },
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
 
-    {
-      path: "/login",
+  {
+    path: "/review",
 
-      element: (
-        <GuestRoute>
-          <LoginPage />
-        </GuestRoute>
-      ),
-    },
+    element: (
+      <ProtectedRoute>
+        <AppLayout>
+          <ReviewPage />
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
 
-    {
-      path: "/register",
+  {
+    path: "/login",
 
-      element: (
-        <GuestRoute>
-          <RegisterPage />
-        </GuestRoute>
-      ),
-    },
-  ]);
+    element: (
+      <GuestRoute>
+        <LoginPage />
+      </GuestRoute>
+    ),
+  },
+
+  {
+    path: "/register",
+
+    element: (
+      <GuestRoute>
+        <RegisterPage />
+      </GuestRoute>
+    ),
+  },
+]);

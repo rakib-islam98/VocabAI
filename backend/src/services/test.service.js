@@ -3,7 +3,7 @@ import prisma from "../config/prisma.js";
 export const testDatabase = async() => {
     const users = await prisma.user.findMany();
 
-    return users;
+    return users.length;
 };
 
 export const protectedTestService = async (user) => {

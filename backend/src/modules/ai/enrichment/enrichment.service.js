@@ -1,6 +1,6 @@
 import { buildVocabularyEnrichmentPrompt } from "./enrichment.prompt.js";
 
-import { generateAIContent } from "./ai.provider.js";
+import { generateAIContent } from "../provider/ai.provider.js";
 
 import { parseEnrichmentResponse } from "./enrichment.parser.js";
 
@@ -15,7 +15,11 @@ export const generateVocabularyEnrichment = async ({
     sourceSentence,
   });
 
-  const rawResponse = await generateAIContent(prompt);
+  const rawResponse = await generateAIContent({
+  prompt,
+
+  temperature: 0.2,
+});
 
   const parsedResponse = parseEnrichmentResponse(rawResponse);
 

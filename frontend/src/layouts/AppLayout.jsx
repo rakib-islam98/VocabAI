@@ -1,20 +1,15 @@
-import Container from "../components/ui/Container";
 import Navbar from "../components/common/Navbar";
 
-export default function AppLayout({ children }) {
+const AppLayout = ({ children }) => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white">
-        <Container>
-          <Navbar />
-        </Container>
-      </header>
+    <div className="min-h-screen bg-slate-50">
+      <Navbar />
 
       <main className="py-6">
-        <Container>
-          {children}
-        </Container>
+        {children}
       </main>
     </div>
   );
-}
+};
+
+export default AppLayout;
