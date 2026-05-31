@@ -24,7 +24,12 @@ export default function GuestRoute({
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return (
+      <Navigate
+        to="/vocabulary"
+        replace
+      />
+    );
   }
 
   return children;

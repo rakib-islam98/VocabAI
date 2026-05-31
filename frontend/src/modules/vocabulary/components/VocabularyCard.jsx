@@ -8,7 +8,7 @@ import { useDeleteVocabulary } from "../hooks/useDeleteVocabulary";
 
 import DeleteVocabularyModal from "./DeleteVocabularyModal";
 
-const VocabularyCard = ({ word }) => {
+const VocabularyCard = ({ word, readOnly = false, }) => {
   const [activeTab, setActiveTab] = useState("hinglish");
 
   const [translatedText, setTranslatedText] = useState("");
@@ -250,44 +250,46 @@ const VocabularyCard = ({ word }) => {
           {/* ACTIONS */}
           <div className="flex flex-col gap-2">
             {/* DELETE */}
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              disabled={isDeleting}
-              className="
-      p-2 rounded-lg
-      bg-red-50
-      border border-red-100
-      text-red-400
-      hover:bg-red-100
-      hover:text-red-600
-      transition
-      active:scale-95
-      disabled:opacity-50
-      disabled:cursor-not-allowed
-    "
-              aria-label="Delete word"
-            >
-              {isDeleting ? (
-                <Loader2 size={15} className="animate-spin stroke-[2.5]" />
-              ) : (
-                <Trash2 size={15} className="stroke-[2.5]" />
-              )}
-            </button>
+            {!readOnly && (
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                disabled={isDeleting}
+                className="
+                  p-2 rounded-lg
+                  bg-red-50
+                  border border-red-100
+                  text-red-400
+                  hover:bg-red-100
+                  hover:text-red-600
+                  transition
+                  active:scale-95
+                  disabled:opacity-50
+                  disabled:cursor-not-allowed
+                "
+                aria-label="Delete word"
+              >
+                {isDeleting ? (
+                  <Loader2 size={15} className="animate-spin stroke-[2.5]" />
+                ) : (
+                  <Trash2 size={15} className="stroke-[2.5]" />
+                )}
+              </button>
+            )}
 
             {/* AUDIO */}
             <button
               onClick={() => pronounceWord(word.word)}
               className="
-      p-2 rounded-lg
-      bg-slate-50
-      border border-slate-200
-      text-slate-400
-      hover:bg-indigo-50
-      hover:text-indigo-600
-      hover:border-indigo-100
-      transition
-      active:scale-95
-    "
+                p-2 rounded-lg
+                bg-slate-50
+                border border-slate-200
+                text-slate-400
+                hover:bg-indigo-50
+                hover:text-indigo-600
+                hover:border-indigo-100
+                transition
+                active:scale-95
+              "
               aria-label="Pronounce word"
             >
               <Volume2 size={15} className="stroke-[2.5]" />
@@ -467,13 +469,15 @@ const VocabularyCard = ({ word }) => {
           )}
         </div>
       </div>
-      <DeleteVocabularyModal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleDelete}
-        isDeleting={isDeleting}
-        word={word.word}
-      />
+      {!readOnly && (
+        <DeleteVocabularyModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleDelete}
+          isDeleting={isDeleting}
+          word={word.word}
+        />
+      )}
     </article>
   );
 };

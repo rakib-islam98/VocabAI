@@ -1,12 +1,5 @@
-const clamp = (
-  value,
-  min,
-  max
-) => {
-  return Math.min(
-    Math.max(value, min),
-    max
-  );
+const clamp = (value, min, max) => {
+  return Math.min(Math.max(value, min), max);
 };
 
 /*
@@ -15,18 +8,28 @@ CALCULATE NEW MASTERY
 ================================
 */
 
-const calculateMasteryScore = ({
-  currentMastery,
-  wasCorrect,
-}) => {
-  const change =
-    wasCorrect ? 5 : -5;
+const calculateMasteryScore = ({ currentMastery, wasCorrect }) => {
+  let change = 0;
 
-  return clamp(
-    currentMastery + change,
-    0,
-    100
-  );
+  if (wasCorrect) {
+    if (currentMastery < 40) {
+      change = 8;
+    } else if (currentMastery < 80) {
+      change = 5;
+    } else {
+      change = 2;
+    }
+  } else {
+    if (currentMastery < 40) {
+      change = -4;
+    } else if (currentMastery < 80) {
+      change = -6;
+    } else {
+      change = -10;
+    }
+  }
+
+  return clamp(currentMastery + change, 0, 100);
 };
 
 /*
@@ -35,14 +38,12 @@ GET DIFFICULTY BUCKET
 ================================
 */
 
-const getDifficultyBucket = (
-  masteryScore
-) => {
-  if (masteryScore <= 35) {
+const getDifficultyBucket = (masteryScore) => {
+  if (masteryScore < 40) {
     return "weak";
   }
 
-  if (masteryScore <= 70) {
+  if (masteryScore < 80) {
     return "medium";
   }
 
@@ -55,54 +56,40 @@ EVALUATE SESSION
 ================================
 */
 
-export const evaluateReviewSession = ({
-  exercises,
-  answers,
-}) => {
+export const evaluateReviewSession = ({ exercises, answers }) => {
   let correctCount = 0;
 
-  const evaluationResults =
-    exercises.map((exercise) => {
-      const userAnswer =
-        answers?.[exercise.id]
-          ?.selectedAnswer;
+  const evaluationResults = exercises.map((exercise) => {
+    const userAnswer = answers?.[exercise.id]?.selectedAnswer;
 
-      const wasCorrect =
-        userAnswer ===
-        exercise.correctAnswer;
+    const wasSkipped = (userAnswer == null);
 
-      if (wasCorrect) {
-        correctCount++;
-      }
+    const wasCorrect = !wasSkipped && (userAnswer === exercise.correctAnswer);
 
-      return {
-        exerciseId: exercise.id,
+    if (wasCorrect) {
+      correctCount++;
+    }
 
-        userWordId:
-          exercise.userWordId,
+    return {
+      exerciseId: exercise.id,
 
-        vocabularyId:
-          exercise.vocabularyId,
+      userWordId: exercise.userWordId,
 
-        exerciseType:
-          exercise.type,
+      vocabularyId: exercise.vocabularyId,
 
-        selectedAnswer:
-          userAnswer || null,
+      exerciseType: exercise.type,
 
-        correctAnswer:
-          exercise.correctAnswer,
+      selectedAnswer: userAnswer ?? null,
 
-        wasCorrect,
-      };
-    });
+      correctAnswer: exercise.correctAnswer,
 
-  const score =
-    Math.round(
-      (correctCount /
-        exercises.length) *
-        100
-    );
+      wasCorrect,
+      
+      wasSkipped,
+    };
+  });
+
+  const score = Math.round((correctCount / exercises.length) * 100);
 
   return {
     score,
@@ -110,7 +97,4 @@ export const evaluateReviewSession = ({
   };
 };
 
-export {
-  calculateMasteryScore,
-  getDifficultyBucket,
-};
+export { calculateMasteryScore, getDifficultyBucket };

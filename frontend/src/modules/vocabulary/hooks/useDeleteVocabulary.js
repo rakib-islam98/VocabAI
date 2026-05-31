@@ -5,6 +5,8 @@ import {
 
 import { toast } from "react-hot-toast";
 
+import useAuthStore from "../../../store/authStore";
+
 import {
   deleteVocabulary,
 } from "../services/vocabulary.service";
@@ -12,8 +14,11 @@ import {
 export const useDeleteVocabulary =
   () => {
 
-    const queryClient =
-      useQueryClient();
+    const queryClient = useQueryClient();
+
+    const user = useAuthStore(
+      (state) => state.user
+    );
 
     return useMutation({
       mutationFn:
@@ -53,8 +58,22 @@ export const useDeleteVocabulary =
         */
 
         queryClient.invalidateQueries({
+            queryKey: [
+              "vocabulary",
+              user?.id,
+            ],
+        });
+
+        queryClient.invalidateQueries({
           queryKey: [
-            "vocabulary",
+            "insights",
+            user?.id,
+          ],
+        });
+        queryClient.invalidateQueries({
+          queryKey: [
+            "review-status",
+            user?.id,
           ],
         });
       },

@@ -1,11 +1,17 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
+import LandingPage from "../pages/LandingPage";
+
 import LoginPage from "../modules/auth/pages/LoginPage";
 import RegisterPage from "../modules/auth/pages/RegisterPage";
 
 import VocabularyPage from "../modules/vocabulary/pages/VocabularyPage";
 
 import ReviewPage from "../modules/review/pages/ReviewPage";
+
+import InsightsPage from "../modules/insights/pages/InsightsPage";
+
+import FeedbackPage from "../modules/feedback/pages/FeedbackPage";
 
 import ProtectedRoute from "./ProtectedRoute";
 import GuestRoute from "./GuestRoute";
@@ -15,8 +21,7 @@ import AppLayout from "../layouts/AppLayout";
 export const router = createBrowserRouter([
   {
     path: "/",
-
-    element: <Navigate to="/vocabulary" replace />,
+    element: <LandingPage />,
   },
 
   {
@@ -38,6 +43,30 @@ export const router = createBrowserRouter([
       <ProtectedRoute>
         <AppLayout>
           <ReviewPage />
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+
+  {
+    path: "/insights",
+
+    element: (
+      <ProtectedRoute>
+        <AppLayout>
+          <InsightsPage />
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+
+  {
+    path: "/feedback",
+
+    element: (
+      <ProtectedRoute>
+        <AppLayout>
+          <FeedbackPage />
         </AppLayout>
       </ProtectedRoute>
     ),

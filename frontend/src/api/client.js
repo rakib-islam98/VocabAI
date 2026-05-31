@@ -1,41 +1,66 @@
 import axios from "axios";
-
 import toast from "react-hot-toast";
 
 import useAuthStore from "../store/authStore";
 
 const api = axios.create({
   baseURL: "http://localhost:5000/api/v1",
-
   withCredentials: true,
 });
 
-let isRedirecting = false;
+let isRefreshing = false;
+let refreshPromise = null;
 
 api.interceptors.response.use(
   (response) => response,
 
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
+
     const isAuthRoute =
-      error.config?.url?.includes("/auth/login") ||
-      error.config?.url?.includes("/auth/register") ||
-      error.config?.url?.includes("/auth/me");
+      originalRequest.url?.includes("/auth/login") ||
+      originalRequest.url?.includes("/auth/register");
 
-    const isAuthenticated = useAuthStore.getState().isAuthenticated;
+    const isRefreshRoute = originalRequest.url?.includes("/auth/refresh");
 
-    if (error.response?.status === 401 && isAuthenticated && !isAuthRoute) {
-      const logout = useAuthStore.getState().logout;
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isAuthRoute &&
+      !isRefreshRoute
+    ) {
+      originalRequest._retry = true;
 
-      logout();
+      try {
+        if (!isRefreshing) {
+          isRefreshing = true;
 
-      if (!isRedirecting) {
-        isRedirecting = true;
+          refreshPromise = api.post("/auth/refresh");
+        }
 
-        toast.error("Session expired. Please login again.");
+        await refreshPromise;
 
-        setTimeout(() => {
-          window.location.href = "/login";
-        }, 1200);
+        isRefreshing = false;
+        refreshPromise = null;
+
+        return api(originalRequest);
+      } catch (refreshError) {
+        isRefreshing = false;
+        refreshPromise = null;
+
+        const { isAuthenticated, logout } = useAuthStore.getState();
+
+        logout();
+
+        if (isAuthenticated) {
+          toast.error("Session expired. Please login again.");
+        }
+
+        return Promise.reject(refreshError);
       }
     }
 

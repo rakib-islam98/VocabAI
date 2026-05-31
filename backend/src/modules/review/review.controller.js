@@ -1,13 +1,23 @@
 import asyncHandler from "../../utils/asyncHandler.js";
 
 import {
-  getOrCreateReviewSession,
+  getReviewStatus,
+  createReviewSession,
   submitReviewSession,
   saveReviewAnswers,
 } from "./review.service.js";
 
-export const getReviewSessionController = asyncHandler(async (req, res) => {
-  const session = await getOrCreateReviewSession(req.user.id);
+export const getReviewStatusController = asyncHandler(async (req, res) => {
+  const status = await getReviewStatus(req.user.id);
+
+  res.status(200).json({
+    success: true,
+    data: status,
+  });
+});
+
+export const createReviewSessionController = asyncHandler(async (req, res) => {
+  const session = await createReviewSession(req.user.id);
 
   res.status(200).json({
     success: true,

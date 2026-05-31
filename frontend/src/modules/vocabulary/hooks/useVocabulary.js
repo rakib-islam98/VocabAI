@@ -1,33 +1,32 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 
+import useAuthStore from "../../../store/authStore";
+
 import { getVocabulary } from "../services/vocabulary.service";
 
-export const useVocabulary = (
-  limit = 10
-) => {
+export const useVocabulary = (search, sort, limit = 10) => {
+  const user = useAuthStore((state) => state.user);
+
   return useInfiniteQuery({
-    queryKey: ["vocabulary"],
+    queryKey: ["vocabulary", user?.id, search, sort,],
 
     queryFn: ({ pageParam = 1 }) =>
-      getVocabulary(pageParam, limit),
+      getVocabulary(pageParam, limit, search, sort),
+
+    enabled: !!user,
 
     initialPageParam: 1,
 
-    getNextPageParam: (
-      lastPage,
-      allPages
-    ) => {
+    getNextPageParam: (lastPage) => {
       const currentPage =
         lastPage?.pagination?.page;
 
       const totalPages =
         lastPage?.pagination?.totalPages;
 
-      if (currentPage < totalPages) {
-        return currentPage + 1;
-      }
-
-      return undefined;
+      return currentPage < totalPages
+        ? currentPage + 1
+        : undefined;
     },
 
     staleTime: 1000 * 60,

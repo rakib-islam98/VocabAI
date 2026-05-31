@@ -14,7 +14,9 @@ import ApiError from "../../utils/ApiError.js";
 
 import { mapReviewSession } from "./review.mapper.js";
 
-export const getOrCreateReviewSession = async (userId) => {
+import { buildReviewResults } from "./utils/reviewResultBuilder.js";
+
+export const getReviewStatus = async (userId) => {
   /*
     =================================
     STEP 1:
@@ -62,26 +64,76 @@ export const getOrCreateReviewSession = async (userId) => {
   });
 
   if (completedSession) {
+    const report = buildReviewResults({
+      exercises: completedSession.exercises,
+
+      answers: completedSession.answers,
+    });
+
     return {
       type: "completed_today",
-      message: "Today's review session already completed.",
+
+      report,
     };
   }
 
   /*
-  =================================
-  STEP 3:
-  GENERATE EXERCISE SESSION
-  =================================
-  */
-
-  const MINIMUM_REVIEW_WORDS = 10;
-
-  /*
-================================
-FETCH USER WORDS
-================================
+=================================
+STEP 3:
+VOCABULARY ANALYSIS
+=================================
 */
+
+  const userWords = await prisma.userWord.findMany({
+    where: {
+      userId,
+    },
+  });
+
+  if (!userWords.length) {
+    return {
+      type: "empty",
+    };
+  }
+
+  if (userWords.length < 10) {
+    return {
+      type: "insufficient_words",
+
+      message:
+        "Add at least 10 vocabulary words to unlock daily review sessions.",
+    };
+  }
+
+  const weakWords = userWords.filter((word) => word.masteryScore < 40).length;
+
+  const mediumWords = userWords.filter(
+    (word) => word.masteryScore >= 40 && word.masteryScore < 80,
+  ).length;
+
+  const strongWords = userWords.filter(
+    (word) => word.masteryScore >= 80,
+  ).length;
+
+  return {
+    type: "ready_to_generate",
+
+    vocabularyCount: userWords.length,
+
+    weakWords,
+
+    mediumWords,
+
+    strongWords,
+
+    estimatedQuestions: 15,
+
+    estimatedDuration: 5,
+  };
+};
+
+export const createReviewSession = async (userId) => {
+  const MINIMUM_REVIEW_WORDS = 10;
 
   const userWords = await prisma.userWord.findMany({
     where: {
@@ -93,49 +145,20 @@ FETCH USER WORDS
     },
   });
 
-  /*
-================================
-EMPTY STATE
-================================
-*/
-
   if (!userWords.length) {
-    return {
-      type: "empty",
-
-      message: "Add vocabulary words to start practicing.",
-    };
+    throw new ApiError(400, "No vocabulary available");
   }
-
-  /*
-================================
-MINIMUM WORD REQUIREMENT
-================================
-*/
 
   if (userWords.length < MINIMUM_REVIEW_WORDS) {
-    return {
-      type: "insufficient_words",
-
-      message: `Add at least ${MINIMUM_REVIEW_WORDS} vocabulary words to unlock practice sessions.`,
-    };
+    throw new ApiError(
+      400,
+      `Add at least ${MINIMUM_REVIEW_WORDS} vocabulary words`,
+    );
   }
-
-  /*
-================================
-GENERATE EXERCISES
-================================
-*/
 
   const exercises = await generateExercises(userWords);
 
-  /*
-================================
-CREATE SESSION
-================================
-*/
-
-  const newSession = await prisma.reviewSession.create({
+  const session = await prisma.reviewSession.create({
     data: {
       userId,
 
@@ -149,7 +172,8 @@ CREATE SESSION
 
   return {
     type: "new",
-    session: mapReviewSession(newSession),
+
+    session: mapReviewSession(session),
   };
 };
 
@@ -329,7 +353,17 @@ export const submitReviewSession = async (sessionId, userId) => {
     return updatedSession;
   });
 
-  return completedSession;
+  const report = buildReviewResults({
+    exercises: session.exercises,
+
+    answers: session.answers,
+  });
+
+  return {
+    sessionId: completedSession.id,
+
+    report,
+  };
 };
 
 export const saveReviewAnswers = async ({ sessionId, userId, answers }) => {

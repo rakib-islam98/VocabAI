@@ -1,7 +1,13 @@
 import api from "../../../api/client";
 
-export const getReviewSession = async () => {
-  const response = await api.get("/review/session");
+export const getReviewStatus = async () => {
+  const response = await api.get("/review/status");
+
+  return response.data;
+};
+
+export const createReviewSession = async () => {
+  const response = await api.post("/review/session");
 
   return response.data;
 };

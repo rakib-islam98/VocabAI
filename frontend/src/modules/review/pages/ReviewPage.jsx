@@ -2,41 +2,110 @@ import { useEffect, useState } from "react";
 
 import toast from "react-hot-toast";
 
-import { useReviewSession } from "../hooks/useReviewSession";
+import { useReviewStatus } from "../hooks/useReviewStatus";
+
+import { useCreateReviewSession } from "../hooks/useCreateReviewSession";
 
 import ReviewLanding from "../components/ReviewLanding";
 
 import ReviewEmptyState from "../components/ReviewEmptyState";
 
-import ReviewCompletedState from "../components/ReviewCompletedState";
-
 import ReviewSessionPlayer from "../components/ReviewSessionPlayer";
 
 import ReviewInsufficientState from "../components/ReviewInsufficientState";
 
+import ReviewResults from "../components/ReviewResults";
+
+import ReviewCompletedToday from "../components/ReviewCompletedToday";
+
+import ReviewResumeSession from "../components/ReviewResumeSession";
+
 const loadingSteps = [
-    "Analyzing your learning progress...",
-    "Selecting vocabulary for practice...",
-    "Generating contextual exercises...",
-    "Balancing difficulty levels...",
-    "Preparing your review session...",
+  "Analyzing your learning progress...",
+  "Selecting vocabulary for practice...",
+  "Generating contextual exercises...",
+  "Balancing difficulty levels...",
+  "Preparing your review session...",
 ];
 
 const ReviewPage = () => {
-  const [sessionData, setSessionData] = useState(null);
-
-  const [loadingStepIndex, setLoadingStepIndex] = useState(0);
   /*
   =================================
-  REVIEW SESSION MUTATION
+  LOCAL STATE
   =================================
   */
 
-  const { mutate, isPending } = useReviewSession();
+  const [sessionData, setSessionData] =
+    useState(null);
+
+  const [loadingStepIndex, setLoadingStepIndex] =
+    useState(0);
+
+  const [reviewReport, setReviewReport] =
+    useState(null);
+
+  const [
+    showCompletedReport,
+    setShowCompletedReport,
+  ] = useState(false);
+
+  const [
+    startActiveSession,
+    setStartActiveSession,
+  ] = useState(false);
 
   /*
   =================================
-  STAGED LOADING EFFECT
+  REVIEW STATUS QUERY
+  =================================
+  */
+
+  const {
+    data,
+    isLoading,
+  } = useReviewStatus();
+
+  /*
+  =================================
+  CREATE SESSION MUTATION
+  =================================
+  */
+
+  const {
+    mutate: createSession,
+    isPending,
+  } = useCreateReviewSession();
+
+  /*
+  =================================
+  SYNC QUERY DATA
+  =================================
+  */
+
+  useEffect(() => {
+    if (data?.data) {
+      setSessionData(data.data);
+    }
+  }, [data]);
+
+  /*
+  =================================
+  SAVED SESSION DETECTION
+  =================================
+  */
+
+  const hasSavedProgress =
+    sessionData?.session?.id
+      ? Boolean(
+          sessionStorage.getItem(
+            `review_answers_${sessionData.session.id}`
+          )
+        )
+      : false;
+
+  /*
+  =================================
+  AI GENERATION LOADING ANIMATION
   =================================
   */
 
@@ -49,45 +118,45 @@ const ReviewPage = () => {
 
     const interval = setInterval(() => {
       setLoadingStepIndex((prev) => {
-        return (prev + 1) % loadingSteps.length;
+        return (
+          (prev + 1) %
+          loadingSteps.length
+        );
       });
     }, 1000);
 
-    return () => clearInterval(interval);
+    return () =>
+      clearInterval(interval);
   }, [isPending]);
 
   /*
   =================================
-  GENERATE SESSION
+  CREATE NEW SESSION
   =================================
   */
 
-  const handleGenerateSession = () => {
-    mutate(undefined, {
-      /*
-        ============================
-        SUCCESS
-        ============================
-        */
+  const handleStartSession =
+    () => {
+      createSession(undefined, {
+        onSuccess: (
+          response
+        ) => {
+          setSessionData(
+            response.data
+          );
+        },
 
-      onSuccess: (data) => {
-        setSessionData(data.data);
-      },
-
-      /*
-        ============================
-        ERROR
-        ============================
-        */
-
-      onError: (error) => {
-        const message =
-          error?.response?.data?.message || "Failed to generate review session";
-
-        toast.error(message);
-      },
-    });
-  };
+        onError: (
+          error
+        ) => {
+          toast.error(
+            error?.response
+              ?.data?.message ||
+              "Failed to create review session"
+          );
+        },
+      });
+    };
 
   /*
   =================================
@@ -114,7 +183,6 @@ const ReviewPage = () => {
             max-w-xl w-full
           "
         >
-          {/* LOADER */}
           <div
             className="
               mx-auto
@@ -127,7 +195,6 @@ const ReviewPage = () => {
             "
           />
 
-          {/* TITLE */}
           <h2
             className="
               mt-6
@@ -139,17 +206,17 @@ const ReviewPage = () => {
             Generating Review Session
           </h2>
 
-          {/* DESCRIPTION */}
           <p
             className="
               mt-3
               text-slate-500
               leading-7
               min-h-[28px]
-              transition-all
             "
           >
-            {loadingSteps[loadingStepIndex]}
+            {loadingSteps[
+              loadingStepIndex
+            ]}
           </p>
         </div>
       </div>
@@ -158,17 +225,71 @@ const ReviewPage = () => {
 
   /*
   =================================
-  INITIAL LANDING
+  INITIAL STATUS LOADING
+  =================================
+  */
+
+  if (isLoading) {
+    return (
+      <div
+        className="
+          min-h-[70vh]
+          flex items-center
+          justify-center
+        "
+      >
+        <div
+          className="
+            text-center
+          "
+        >
+          <div
+            className="
+              mx-auto
+              h-10 w-10
+              rounded-full
+              border-4
+              border-slate-200
+              border-t-slate-900
+              animate-spin
+            "
+          />
+
+          <p
+            className="
+              mt-4
+              text-slate-500
+            "
+          >
+            Loading review...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  /*
+  =================================
+  REVIEW RESULTS
+  =================================
+  */
+
+  if (reviewReport) {
+    return (
+      <ReviewResults
+        report={reviewReport}
+      />
+    );
+  }
+
+  /*
+  =================================
+  SAFETY GUARD
   =================================
   */
 
   if (!sessionData) {
-    return (
-      <ReviewLanding
-        isPending={isPending}
-        onGenerateSession={handleGenerateSession}
-      />
-    );
+    return null;
   }
 
   /*
@@ -183,22 +304,63 @@ const ReviewPage = () => {
 
   /*
   =================================
-  MINIMUM WORD REQUIREMENT
+  INSUFFICIENT WORDS
   =================================
   */
 
-  if (sessionData.type === "insufficient_words") {
-    return <ReviewInsufficientState message={sessionData.message} />;
+  if (
+    sessionData.type ===
+    "insufficient_words"
+  ) {
+    return (
+      <ReviewInsufficientState
+        message={
+          sessionData.message
+        }
+      />
+    );
   }
 
   /*
   =================================
-  SESSION ALREADY COMPLETED
+  READY TO GENERATE
   =================================
   */
 
-  if (sessionData.type === "completed_today") {
-    return <ReviewCompletedState />;
+  if (
+    sessionData.type ===
+    "ready_to_generate"
+  ) {
+    return (
+      <ReviewLanding
+        isPending={isPending}
+        onStartSession={handleStartSession}
+
+        vocabularyCount={
+          sessionData.vocabularyCount
+        }
+
+        weakWords={
+          sessionData.weakWords
+        }
+
+        mediumWords={
+          sessionData.mediumWords
+        }
+
+        strongWords={
+          sessionData.strongWords
+        }
+
+        estimatedQuestions={
+          sessionData.estimatedQuestions
+        }
+
+        estimatedDuration={
+          sessionData.estimatedDuration
+        }
+      />
+    );
   }
 
   /*
@@ -207,7 +369,107 @@ const ReviewPage = () => {
   =================================
   */
 
-  return <ReviewSessionPlayer sessionData={sessionData} />;
+  if (
+    sessionData.type ===
+    "active"
+  ) {
+    if (
+      startActiveSession
+    ) {
+      return (
+        <ReviewSessionPlayer
+          sessionData={
+            sessionData
+          }
+          onSessionCompleted={
+            setReviewReport
+          }
+        />
+      );
+    }
+
+    return (
+      <ReviewResumeSession
+        hasSavedProgress={
+          hasSavedProgress
+        }
+        session={
+          sessionData.session
+        }
+        onContinue={() =>
+          setStartActiveSession(
+            true
+          )
+        }
+      />
+    );
+  }
+
+  /*
+  =================================
+  COMPLETED TODAY
+  =================================
+  */
+
+  if (
+    sessionData.type ===
+    "completed_today"
+  ) {
+    if (
+      showCompletedReport
+    ) {
+      return (
+        <ReviewResults
+          report={
+            sessionData.report
+          }
+        />
+      );
+    }
+
+    return (
+      <ReviewCompletedToday
+        report={
+          sessionData.report
+        }
+        onViewReport={() =>
+          setShowCompletedReport(
+            true
+          )
+        }
+      />
+    );
+  }
+
+  /*
+  =================================
+  NEW SESSION
+  =================================
+  */
+
+  if (
+    sessionData.type ===
+    "new"
+  ) {
+    return (
+      <ReviewSessionPlayer
+        sessionData={
+          sessionData
+        }
+        onSessionCompleted={
+          setReviewReport
+        }
+      />
+    );
+  }
+
+  /*
+  =================================
+  FALLBACK
+  =================================
+  */
+
+  return null;
 };
 
 export default ReviewPage;

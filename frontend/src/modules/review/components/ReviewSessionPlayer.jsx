@@ -4,8 +4,6 @@ import toast from "react-hot-toast";
 
 import ReviewProgress from "./ReviewProgress";
 import ReviewQuestionCard from "./ReviewQuestionCard";
-import ReviewNavigation from "./ReviewNavigation";
-import ReviewSessionComplete from "./ReviewSessionComplete";
 
 import ConfirmDialog from "../../../components/common/ConfirmDialog";
 
@@ -13,7 +11,7 @@ import { useSubmitReview } from "../hooks/useSubmitReview";
 
 import { useSaveReviewAnswers } from "../hooks/useSaveReviewAnswers";
 
-const ReviewSessionPlayer = ({ sessionData }) => {
+const ReviewSessionPlayer = ({ sessionData, onSessionCompleted }) => {
   const questions = sessionData?.session?.exercises || [];
 
   const sessionId = sessionData?.session?.id;
@@ -36,14 +34,6 @@ const ReviewSessionPlayer = ({ sessionData }) => {
   */
 
   const { mutateAsync: saveAnswers } = useSaveReviewAnswers();
-
-  /*
-  =================================
-  SESSION COMPLETION
-  =================================
-  */
-
-  const [isCompleted, setIsCompleted] = useState(false);
 
   /*
   =================================
@@ -108,10 +98,6 @@ const ReviewSessionPlayer = ({ sessionData }) => {
   =================================
   */
 
-  if (isCompleted) {
-    return <ReviewSessionComplete />;
-  }
-
   /*
   =================================
   CURRENT QUESTION
@@ -140,8 +126,7 @@ const ReviewSessionPlayer = ({ sessionData }) => {
   =================================
   */
 
-  const selectedAnswer = answers[currentQuestion.id]?.selectedAnswer || null;
-
+  const selectedAnswer = answers[currentQuestion.id]?.selectedAnswer ?? null;
   /*
   =================================
   ANSWER STATS
@@ -221,7 +206,7 @@ const ReviewSessionPlayer = ({ sessionData }) => {
         ============================
         */
 
-      await submitSession({
+      const response = await submitSession({
         sessionId,
       });
 
@@ -245,8 +230,7 @@ const ReviewSessionPlayer = ({ sessionData }) => {
 
       setShowSubmitDialog(false);
 
-      setIsCompleted(true);
-
+      onSessionCompleted(response.data.report);
       setIsSubmittingSession(false);
     } catch (error) {
       toast.error("Failed to submit session");

@@ -107,29 +107,60 @@ export const addVocabularyService = async (userId, data) => {
   return userWord;
 };
 
-export const getUserVocabularyService = async (userId, page, limit, skip) => {
+export const getUserVocabularyService = async (userId, page, limit, skip, search = "", sort = "newest") => {
+  const where = {
+    userId,
+  };
+
+  if (search.trim()) {
+    where.vocabulary = {
+      word: {
+        contains: search.trim(),
+        mode: "insensitive",
+      },
+    };
+  }
+
+  const orderByMap = {
+    newest: {
+      createdAt: "desc",
+    },
+
+    oldest: {
+      createdAt: "asc",
+    },
+
+    az: {
+      vocabulary: {
+        word: "asc",
+      },
+    },
+
+    za: {
+      vocabulary: {
+        word: "desc",
+      },
+    },
+  };
+    
   const [userWords, total] = await Promise.all([
     prisma.userWord.findMany({
-      where: {
-        userId,
-      },
+      where,
 
       include: {
         vocabulary: true,
       },
 
-      orderBy: {
-        createdAt: "desc",
-      },
+      orderBy:
+        orderByMap[sort] ||
+        orderByMap.newest,
 
       skip,
       take: limit,
     }),
 
     prisma.userWord.count({
-      where: {
-        userId,
-      },
+      where,
     }),
   ]);
 
@@ -236,4 +267,23 @@ export const retryPendingVocabularyImagesService = async () => {
   }
 
   return results;
+};
+
+export const getVocabularyByIdService = async (userId, userWordId) => {
+  const userWord = await prisma.userWord.findFirst({
+    where: {
+      id: userWordId,
+      userId,
+    },
+
+    include: {
+      vocabulary: true,
+    },
+  });
+
+  if (!userWord) {
+    throw new ApiError(404, "Vocabulary not found");
+  }
+
+  return userWord;
 };

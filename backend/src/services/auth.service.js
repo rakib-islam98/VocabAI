@@ -1,7 +1,11 @@
 import bcrypt from "bcryptjs";
 import prisma from "../config/prisma.js";
-import { generateToken } from "../utils/generateToken.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../utils/generateToken.js";
 import ApiError from "../utils/ApiError.js";
+import { verifyRefreshToken } from "../utils/verifyToken.js";
 
 export const registerService = async ({ name, email, password }) => {
   // validation
@@ -33,12 +37,17 @@ export const registerService = async ({ name, email, password }) => {
   });
 
   // generate token
-  const token = generateToken({
+  const accessToken = generateAccessToken({
+    id: user.id,
+  });
+
+  const refreshToken = generateRefreshToken({
     id: user.id,
   });
 
   return {
-    token,
+    accessToken,
+    refreshToken,
     user: {
       id: user.id,
       name: user.name,
@@ -68,12 +77,17 @@ export const loginService = async ({ email, password }) => {
     throw new ApiError(401, "Invalid credentials");
   }
 
-  const token = generateToken({
+  const accessToken = generateAccessToken({
+    id: user.id,
+  });
+
+  const refreshToken = generateRefreshToken({
     id: user.id,
   });
 
   return {
-    token,
+    accessToken,
+    refreshToken,
     user: {
       id: user.id,
       name: user.name,
@@ -106,4 +120,33 @@ export const getUserService = async (userId) => {
   }
 
   return user;
+};
+
+export const refreshAccessTokenService = async (refreshToken) => {
+  if (!refreshToken) {
+    throw new ApiError(401, "Refresh token missing");
+  }
+
+  const decoded = verifyRefreshToken(refreshToken);
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: decoded.id,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!user) {
+    throw new ApiError(401, "User not found");
+  }
+
+  const accessToken = generateAccessToken({
+    id: decoded.id,
+  });
+
+  return {
+    accessToken,
+  };
 };

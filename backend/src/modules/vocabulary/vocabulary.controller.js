@@ -6,6 +6,7 @@ import {
   getUserVocabularyService,
   deleteVocabularyService,
   retryPendingVocabularyImagesService,
+  getVocabularyByIdService,
 } from "./vocabulary.service.js";
 import { validateAddVocabulary } from "./vocabulary.validation.js";
 import { mapUserVocabulary } from "./vocabulary.mapper.js";
@@ -32,11 +33,18 @@ export const addVocabularyController = asyncHandler(async (req, res) => {
 export const getUserVocabularyController = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req.query);
 
+  const {
+    search = "",
+    sort = "newest",
+  } = req.query;
+
   const { userWords, pagination } = await getUserVocabularyService(
     req.user.id,
     page,
     limit,
     skip,
+    search,
+    sort
   );
 
   res.status(200).json({
@@ -71,3 +79,13 @@ export const retryPendingVocabularyImages = async (req, res) => {
   });
 };
 
+export const getVocabularyByIdController = asyncHandler(async (req, res) => {
+  const userWord = await getVocabularyByIdService(req.user.id, req.params.id);
+
+  res.status(200).json({
+    success: true,
+    message: "Vocabulary fetched successfully",
+
+    data: mapUserVocabulary(userWord),
+  });
+});

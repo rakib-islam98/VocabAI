@@ -3,6 +3,7 @@ import express from "express";
 import healthRoutes from "./health.routes.js";
 import testRoutes from "./test.routes.js";
 import authRoutes from "./auth.routes.js";
+import insightsRoutes from "../modules/insights/insights.routes.js"
 
 import vocabularyRoutes from "../modules/vocabulary/vocabulary.routes.js"
 import reviewRoutes from "../modules/review/review.routes.js"
@@ -20,5 +21,6 @@ router.use("/test", testRoutes);
 router.use("/auth", authRoutes);
 router.use("/vocabulary", vocabularyRoutes);
 router.use("/review", reviewRoutes);
+router.use("/insights", insightsRoutes);
 
 export default router;

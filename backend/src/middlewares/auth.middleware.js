@@ -1,17 +1,17 @@
 import prisma from "../config/prisma.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
-import verifyToken from "../utils/verifyToken.js";
+import { verifyAccessToken } from "../utils/verifyToken.js"
 
 const authMiddleware = asyncHandler(async (req, res, next) => {
 
-    const token = req.cookies?.token;
+    const token = req.cookies?.accessToken;
 
     if (!token) {
         throw new ApiError(401, "Unauthorized access");
     }
 
-    const decoded = verifyToken(token);
+    const decoded = verifyAccessToken(token);
 
     const user = await prisma.user.findUnique({
         where: {
