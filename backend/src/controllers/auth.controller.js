@@ -1,3 +1,4 @@
+import { env } from "../config/env.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import {
   registerService,
@@ -9,22 +10,26 @@ import {
   resetPassword,
 } from "../services/auth.service.js";
 
+const cookieOptions = {
+  httpOnly: true,
+  secure: env.NODE_ENV === "production",
+  sameSite:
+    env.NODE_ENV === "production"
+      ? "none"
+      : "strict",
+  path: "/",
+};
+
 export const registerUser = asyncHandler(async (req, res) => {
   const result = await registerService(req.body);
 
   res.cookie("accessToken", result.accessToken, {
-    httpOnly: true,
-    secure: false,
-    sameSite: "strict",
-    path: "/",
+    ...cookieOptions,
     maxAge: 15 * 60 * 1000,
   });
 
   res.cookie("refreshToken", result.refreshToken, {
-    httpOnly: true,
-    secure: false,
-    sameSite: "strict",
-    path: "/",
+    ...cookieOptions,
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 
@@ -39,18 +44,12 @@ export const loginUser = asyncHandler(async (req, res) => {
   const result = await loginService(req.body);
 
   res.cookie("accessToken", result.accessToken, {
-    httpOnly: true,
-    secure: false,
-    sameSite: "strict",
-    path: "/",
+    ...cookieOptions,
     maxAge: 15 * 60 * 1000,
   });
 
   res.cookie("refreshToken", result.refreshToken, {
-    httpOnly: true,
-    secure: false,
-    sameSite: "strict",
-    path: "/",
+    ...cookieOptions,
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 
@@ -64,19 +63,9 @@ export const loginUser = asyncHandler(async (req, res) => {
 export const logoutUser = asyncHandler(async (req, res) => {
   const result = await logoutService();
 
-  res.clearCookie("accessToken", {
-    httpOnly: true,
-    secure: false,
-    sameSite: "strict",
-    path: "/",
-  });
+  res.clearCookie("accessToken", cookieOptions);
 
-  res.clearCookie("refreshToken", {
-    httpOnly: true,
-    secure: false,
-    sameSite: "strict",
-    path: "/",
-  });
+  res.clearCookie("refreshToken", cookieOptions);
 
   return res.status(200).json(result);
 });
@@ -97,10 +86,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
     const result = await refreshAccessTokenService(refreshToken);
 
     res.cookie("accessToken", result.accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-      path: "/",
+      ...cookieOptions,
       maxAge: 15 * 60 * 1000,
     });
 
@@ -109,19 +95,9 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
       message: "Access token refreshed",
     });
   } catch (error) {
-    res.clearCookie("accessToken", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-      path: "/",
-    });
+    res.clearCookie("accessToken", cookieOptions);
 
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-      path: "/",
-    });
+    res.clearCookie("refreshToken", cookieOptions);
 
     throw error;
   }
