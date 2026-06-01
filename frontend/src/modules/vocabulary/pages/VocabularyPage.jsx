@@ -57,7 +57,7 @@ const VocabularyPage = () => {
 
       <Container>
         {/* PAGE HEADER */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">
               Vocabulary
@@ -72,13 +72,14 @@ const VocabularyPage = () => {
           <button
             onClick={() => setIsModalOpen(true)}
             className="
-              flex items-center gap-2
+              flex items-center justify-center gap-2
+              self-start
               bg-slate-900 text-white
               px-4 py-2 rounded-xl
               hover:bg-slate-800
               active:scale-[0.98]
               transition-all duration-200
-            "
+              "
           >
             <Plus size={18} />
 

@@ -35,24 +35,15 @@ const ReviewPage = () => {
   =================================
   */
 
-  const [sessionData, setSessionData] =
-    useState(null);
+  const [sessionData, setSessionData] = useState(null);
 
-  const [loadingStepIndex, setLoadingStepIndex] =
-    useState(0);
+  const [loadingStepIndex, setLoadingStepIndex] = useState(0);
 
-  const [reviewReport, setReviewReport] =
-    useState(null);
+  const [reviewReport, setReviewReport] = useState(null);
 
-  const [
-    showCompletedReport,
-    setShowCompletedReport,
-  ] = useState(false);
+  const [showCompletedReport, setShowCompletedReport] = useState(false);
 
-  const [
-    startActiveSession,
-    setStartActiveSession,
-  ] = useState(false);
+  const [startActiveSession, setStartActiveSession] = useState(false);
 
   /*
   =================================
@@ -60,10 +51,7 @@ const ReviewPage = () => {
   =================================
   */
 
-  const {
-    data,
-    isLoading,
-  } = useReviewStatus();
+  const { data, isLoading } = useReviewStatus();
 
   /*
   =================================
@@ -71,10 +59,7 @@ const ReviewPage = () => {
   =================================
   */
 
-  const {
-    mutate: createSession,
-    isPending,
-  } = useCreateReviewSession();
+  const { mutate: createSession, isPending } = useCreateReviewSession();
 
   /*
   =================================
@@ -83,9 +68,17 @@ const ReviewPage = () => {
   */
 
   useEffect(() => {
-    if (data?.data) {
-      setSessionData(data.data);
+    if (!data?.data) {
+      return;
     }
+
+    setSessionData((current) => {
+      if (current?.type === "new") {
+        return current;
+      }
+
+      return data.data;
+    });
   }, [data]);
 
   /*
@@ -94,14 +87,22 @@ const ReviewPage = () => {
   =================================
   */
 
-  const hasSavedProgress =
-    sessionData?.session?.id
-      ? Boolean(
-          sessionStorage.getItem(
-            `review_answers_${sessionData.session.id}`
-          )
-        )
-      : false;
+  const hasSavedProgress = (() => {
+    if (!sessionData?.session?.id) {
+      return false;
+    }
+
+    try {
+      const savedAnswers = JSON.parse(
+        sessionStorage.getItem(`review_answers_${sessionData.session.id}`) ||
+          "{}",
+      );
+
+      return Object.keys(savedAnswers).length > 0;
+    } catch {
+      return false;
+    }
+  })();
 
   /*
   =================================
@@ -118,15 +119,11 @@ const ReviewPage = () => {
 
     const interval = setInterval(() => {
       setLoadingStepIndex((prev) => {
-        return (
-          (prev + 1) %
-          loadingSteps.length
-        );
+        return (prev + 1) % loadingSteps.length;
       });
     }, 1000);
 
-    return () =>
-      clearInterval(interval);
+    return () => clearInterval(interval);
   }, [isPending]);
 
   /*
@@ -135,28 +132,19 @@ const ReviewPage = () => {
   =================================
   */
 
-  const handleStartSession =
-    () => {
-      createSession(undefined, {
-        onSuccess: (
-          response
-        ) => {
-          setSessionData(
-            response.data
-          );
-        },
+  const handleStartSession = () => {
+    createSession(undefined, {
+      onSuccess: (response) => {
+        setSessionData(response.data);
+      },
 
-        onError: (
-          error
-        ) => {
-          toast.error(
-            error?.response
-              ?.data?.message ||
-              "Failed to create review session"
-          );
-        },
-      });
-    };
+      onError: (error) => {
+        toast.error(
+          error?.response?.data?.message || "Failed to create review session",
+        );
+      },
+    });
+  };
 
   /*
   =================================
@@ -178,9 +166,11 @@ const ReviewPage = () => {
             bg-white border
             rounded-3xl
             shadow-sm
-            p-10
+            p-8
             text-center
-            max-w-xl w-full
+            w-full
+            max-w-sm
+            mx-4
           "
         >
           <div
@@ -214,9 +204,7 @@ const ReviewPage = () => {
               min-h-[28px]
             "
           >
-            {loadingSteps[
-              loadingStepIndex
-            ]}
+            {loadingSteps[loadingStepIndex]}
           </p>
         </div>
       </div>
@@ -275,11 +263,7 @@ const ReviewPage = () => {
   */
 
   if (reviewReport) {
-    return (
-      <ReviewResults
-        report={reviewReport}
-      />
-    );
+    return <ReviewResults report={reviewReport} />;
   }
 
   /*
@@ -308,17 +292,8 @@ const ReviewPage = () => {
   =================================
   */
 
-  if (
-    sessionData.type ===
-    "insufficient_words"
-  ) {
-    return (
-      <ReviewInsufficientState
-        message={
-          sessionData.message
-        }
-      />
-    );
+  if (sessionData.type === "insufficient_words") {
+    return <ReviewInsufficientState message={sessionData.message} />;
   }
 
   /*
@@ -327,38 +302,17 @@ const ReviewPage = () => {
   =================================
   */
 
-  if (
-    sessionData.type ===
-    "ready_to_generate"
-  ) {
+  if (sessionData.type === "ready_to_generate") {
     return (
       <ReviewLanding
         isPending={isPending}
         onStartSession={handleStartSession}
-
-        vocabularyCount={
-          sessionData.vocabularyCount
-        }
-
-        weakWords={
-          sessionData.weakWords
-        }
-
-        mediumWords={
-          sessionData.mediumWords
-        }
-
-        strongWords={
-          sessionData.strongWords
-        }
-
-        estimatedQuestions={
-          sessionData.estimatedQuestions
-        }
-
-        estimatedDuration={
-          sessionData.estimatedDuration
-        }
+        vocabularyCount={sessionData.vocabularyCount}
+        weakWords={sessionData.weakWords}
+        mediumWords={sessionData.mediumWords}
+        strongWords={sessionData.strongWords}
+        estimatedQuestions={sessionData.estimatedQuestions}
+        estimatedDuration={sessionData.estimatedDuration}
       />
     );
   }
@@ -369,38 +323,21 @@ const ReviewPage = () => {
   =================================
   */
 
-  if (
-    sessionData.type ===
-    "active"
-  ) {
-    if (
-      startActiveSession
-    ) {
+  if (sessionData.type === "active") {
+    if (startActiveSession) {
       return (
         <ReviewSessionPlayer
-          sessionData={
-            sessionData
-          }
-          onSessionCompleted={
-            setReviewReport
-          }
+          sessionData={sessionData}
+          onSessionCompleted={setReviewReport}
         />
       );
     }
 
     return (
       <ReviewResumeSession
-        hasSavedProgress={
-          hasSavedProgress
-        }
-        session={
-          sessionData.session
-        }
-        onContinue={() =>
-          setStartActiveSession(
-            true
-          )
-        }
+        hasSavedProgress={hasSavedProgress}
+        session={sessionData.session}
+        onContinue={() => setStartActiveSession(true)}
       />
     );
   }
@@ -411,32 +348,15 @@ const ReviewPage = () => {
   =================================
   */
 
-  if (
-    sessionData.type ===
-    "completed_today"
-  ) {
-    if (
-      showCompletedReport
-    ) {
-      return (
-        <ReviewResults
-          report={
-            sessionData.report
-          }
-        />
-      );
+  if (sessionData.type === "completed_today") {
+    if (showCompletedReport) {
+      return <ReviewResults report={sessionData.report} />;
     }
 
     return (
       <ReviewCompletedToday
-        report={
-          sessionData.report
-        }
-        onViewReport={() =>
-          setShowCompletedReport(
-            true
-          )
-        }
+        report={sessionData.report}
+        onViewReport={() => setShowCompletedReport(true)}
       />
     );
   }
@@ -447,18 +367,11 @@ const ReviewPage = () => {
   =================================
   */
 
-  if (
-    sessionData.type ===
-    "new"
-  ) {
+  if (sessionData.type === "new") {
     return (
       <ReviewSessionPlayer
-        sessionData={
-          sessionData
-        }
-        onSessionCompleted={
-          setReviewReport
-        }
+        sessionData={sessionData}
+        onSessionCompleted={setReviewReport}
       />
     );
   }

@@ -33,20 +33,5 @@ export const useAddWord = () => {
         ],
       });
     },
-
-    onError: (error) => {
-      if (
-        error.response?.status === 401
-      ) {
-        return;
-      }
-
-      toast.error(
-        getErrorMessage(error),
-        {
-          id: "add-word-error",
-        }
-      );
-    },
   });
 };

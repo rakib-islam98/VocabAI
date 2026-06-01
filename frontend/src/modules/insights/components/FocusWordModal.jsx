@@ -36,7 +36,7 @@ const FocusWordModal = ({ userWordId, isOpen, onClose }) => {
         className="
             relative
             w-full
-            max-w-[40vw]
+            max-w-3xl
             max-h-[90vh]
             overflow-y-auto
         "

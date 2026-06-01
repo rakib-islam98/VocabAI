@@ -80,7 +80,7 @@ const InsightsHero = ({ hero }) => {
     >
       {/* TOP */}
 
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
             <Award
@@ -99,7 +99,7 @@ const InsightsHero = ({ hero }) => {
             </span>
           </div>
 
-          <div className="mt-4 flex items-center gap-4">
+          <div className="mt-4 flex flex-wrap items-center gap-4">
             <h2
               className="
                 text-5xl

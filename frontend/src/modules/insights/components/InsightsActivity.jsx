@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Calendar, Flame, Target } from "lucide-react";
 
 const InsightsActivity = ({ activity }) => {
@@ -15,7 +16,34 @@ const InsightsActivity = ({ activity }) => {
 
   const days = [];
 
-  for (let i = 139; i >= 0; i--) {
+  const [isMobile, setIsMobile] =
+  useState(window.innerWidth < 640);
+
+useEffect(() => {
+  const handleResize = () => {
+    setIsMobile(
+      window.innerWidth < 640
+    );
+  };
+
+  window.addEventListener(
+    "resize",
+    handleResize
+  );
+
+  return () =>
+    window.removeEventListener(
+      "resize",
+      handleResize
+    );
+}, []);
+
+  const totalDays =
+  isMobile
+    ? 84
+    : 140;
+
+  for (let i = totalDays - 1; i >= 0; i--) {
     const date = new Date(today);
 
     date.setDate(today.getDate() - i);

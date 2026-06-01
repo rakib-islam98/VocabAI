@@ -117,7 +117,7 @@ const InsightsWeakWords = ({
           <div className="mt-6">
             <div
               className="
-                overflow-hidden
+                overflow-x-auto
                 rounded-2xl
                 border
                 border-slate-200
@@ -128,7 +128,8 @@ const InsightsWeakWords = ({
               <div
                 className="
                   grid
-                  grid-cols-[60px_1fr_120px_120px]
+                  grid-cols-[60px_minmax(140px,1fr)_100px_90px]
+                  min-w-[420px]
                   border-b
                   border-slate-200
                   bg-slate-50
@@ -158,7 +159,8 @@ const InsightsWeakWords = ({
                     key={word.word}
                     className="
                       grid
-                      grid-cols-[60px_1fr_120px_120px]
+                      grid-cols-[60px_minmax(140px,1fr)_100px_90px]
+                      min-w-[420px]
                       items-center
                       border-b
                       border-slate-100

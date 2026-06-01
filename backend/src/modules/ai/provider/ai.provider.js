@@ -17,7 +17,7 @@ const cleanJson = (text) => {
 export const generateAIContent = async ({
   prompt,
   systemInstruction = "",
-  model = "google/gemini-2.0-flash-001",
+  model = process.env.AI_MODEL,
   temperature = 0.2,
   jsonMode = false,
 }) => {

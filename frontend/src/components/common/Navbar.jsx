@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { Menu, X } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
@@ -38,6 +39,7 @@ const Navbar = () => {
   const user = useAuthStore((state) => state.user);
 
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -49,6 +51,7 @@ const Navbar = () => {
 
       toast.success("Logged out successfully");
 
+      setMobileMenuOpen(false);
       setShowLogoutDialog(false);
 
       navigate("/login");
@@ -62,7 +65,7 @@ const Navbar = () => {
       <header className="sticky top-0 z-50 border-b bg-white/90 backdrop-blur">
         <Container className="h-16 flex items-center justify-between">
           {/* LEFT */}
-          <div className="flex items-center gap-10">
+          <div className="flex items-center gap-4 md:gap-10">
             <NavLink
               to="/vocabulary"
               className="text-2xl font-bold tracking-tight text-slate-900"
@@ -70,7 +73,7 @@ const Navbar = () => {
               VocabAI
             </NavLink>
 
-            <nav className="flex items-center gap-5">
+            <nav className="hidden md:flex items-center gap-5">
               {navLinks.map((link) => (
                 <NavLink
                   key={link.to}
@@ -91,13 +94,14 @@ const Navbar = () => {
 
           {/* RIGHT */}
           <div className="flex items-center gap-4">
-            <p className="text-sm font-medium text-slate-600">
+            <p className="hidden md:block text-sm font-medium text-slate-600">
               {user?.name}
             </p>
 
             <button
               onClick={() => setShowLogoutDialog(true)}
               className="
+                hidden md:block
                 text-sm
                 font-medium
                 text-red-500
@@ -107,8 +111,52 @@ const Navbar = () => {
             >
               Logout
             </button>
+            <button
+              className="md:hidden p-1"
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+            >
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
           </div>
         </Container>
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t bg-white shadow-lg">
+            <Container className="py-4">
+              <div className="flex flex-col divide-y divide-slate-100">
+                {navLinks.map((link) => (
+                  <NavLink
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={({ isActive }) =>
+                      `py-3 text-sm font-medium transition-colors ${
+                        isActive
+                          ? "text-slate-900"
+                          : "text-slate-500 hover:text-slate-900"
+                      }`
+                    }
+                  >
+                    {link.label}
+                  </NavLink>
+                ))}
+
+                <div className="border-t pt-4">
+                  <p className="mb-3 text-sm text-slate-600">{user?.name}</p>
+
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setShowLogoutDialog(true);
+                    }}
+                    className="text-sm font-medium text-red-500 hover:text-red-600"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            </Container>
+          </div>
+        )}
       </header>
 
       <ConfirmDialog
