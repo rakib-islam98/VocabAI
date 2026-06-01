@@ -19,13 +19,6 @@ export const useAddWord = () => {
     mutationFn: addWord,
 
     onSuccess: async () => {
-      toast.success(
-        "Word added successfully",
-        {
-          id: "add-word-success",
-        }
-      );
-
       await queryClient.invalidateQueries({
           queryKey: [
             "vocabulary",
