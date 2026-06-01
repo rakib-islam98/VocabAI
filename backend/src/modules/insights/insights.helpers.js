@@ -4,9 +4,7 @@ export const calculateLearningScore = ({
   consistency,
 }) => {
   return Math.round(
-    accuracy * 0.4 +
-      averageMasteryScore * 0.4 +
-      consistency * 0.2
+    accuracy * 0.4 + averageMasteryScore * 0.4 + consistency * 0.2,
   );
 };
 
@@ -35,37 +33,55 @@ export const buildMasteryDistribution = (userWords) => {
   return distribution;
 };
 
-export const buildActivityHeatmap = (reviewAttempts) => {
+export const buildActivityHeatmap = (reviewAttempts, userWords) => {
   const activityMap = new Map();
 
+  // Review activity
   for (const attempt of reviewAttempts) {
-    const date = attempt.createdAt
-      .toISOString()
-      .split("T")[0];
+    const date = attempt.createdAt.toISOString().split("T")[0];
 
-    activityMap.set(
-      date,
-      (activityMap.get(date) || 0) + 1
-    );
+    if (!activityMap.has(date)) {
+      activityMap.set(date, {
+        reviews: 0,
+        additions: 0,
+      });
+    }
+
+    activityMap.get(date).reviews += 1;
+  }
+
+  // Vocabulary additions
+  for (const word of userWords) {
+    const date = word.createdAt.toISOString().split("T")[0];
+
+    if (!activityMap.has(date)) {
+      activityMap.set(date, {
+        reviews: 0,
+        additions: 0,
+      });
+    }
+
+    activityMap.get(date).additions += 1;
   }
 
   return [...activityMap.entries()]
-    .map(([date, count]) => ({
+    .map(([date, activity]) => ({
       date,
-      count,
+
+      reviews: activity.reviews,
+
+      additions: activity.additions,
+
+      level: (activity.additions > 0 ? 1 : 0) + (activity.reviews > 0 ? 2 : 0),
     }))
-    .sort((a, b) =>
-      a.date.localeCompare(b.date)
-    );
+    .sort((a, b) => a.date.localeCompare(b.date));
 };
 
 export const buildAccuracyTrend = (reviewAttempts) => {
   const trendMap = new Map();
 
   for (const attempt of reviewAttempts) {
-    const date = attempt.createdAt
-      .toISOString()
-      .split("T")[0];
+    const date = attempt.createdAt.toISOString().split("T")[0];
 
     if (!trendMap.has(date)) {
       trendMap.set(date, {
@@ -87,13 +103,9 @@ export const buildAccuracyTrend = (reviewAttempts) => {
     .map(([date, stats]) => ({
       date,
 
-      accuracy: Math.round(
-        (stats.correct / stats.total) * 100
-      ),
+      accuracy: Math.round((stats.correct / stats.total) * 100),
     }))
-    .sort((a, b) =>
-      a.date.localeCompare(b.date)
-    );
+    .sort((a, b) => a.date.localeCompare(b.date));
 };
 
 export const buildVocabularyGrowth = (userWords) => {
@@ -103,13 +115,10 @@ export const buildVocabularyGrowth = (userWords) => {
     const date = new Date(word.createdAt);
 
     const monthKey = `${date.getFullYear()}-${String(
-      date.getMonth() + 1
+      date.getMonth() + 1,
     ).padStart(2, "0")}`;
 
-    growthMap.set(
-      monthKey,
-      (growthMap.get(monthKey) || 0) + 1
-    );
+    growthMap.set(monthKey, (growthMap.get(monthKey) || 0) + 1);
   }
 
   return [...growthMap.entries()]
@@ -117,14 +126,10 @@ export const buildVocabularyGrowth = (userWords) => {
       month,
       count,
     }))
-    .sort((a, b) =>
-      a.month.localeCompare(b.month)
-    );
+    .sort((a, b) => a.month.localeCompare(b.month));
 };
 
-export const buildExercisePerformance = (
-  reviewAttempts
-) => {
+export const buildExercisePerformance = (reviewAttempts) => {
   const performanceMap = new Map();
 
   for (const attempt of reviewAttempts) {
@@ -146,17 +151,13 @@ export const buildExercisePerformance = (
     }
   }
 
-  return [...performanceMap.entries()].map(
-    ([type, stats]) => ({
-      type,
+  return [...performanceMap.entries()].map(([type, stats]) => ({
+    type,
 
-      accuracy: Math.round(
-        (stats.correct / stats.total) * 100
-      ),
+    accuracy: Math.round((stats.correct / stats.total) * 100),
 
-      attempts: stats.total,
-    })
-  );
+    attempts: stats.total,
+  }));
 };
 
 export const buildStreaks = (reviewSessions) => {
@@ -164,11 +165,7 @@ export const buildStreaks = (reviewSessions) => {
     ...new Set(
       reviewSessions
         .filter((session) => session.completedAt)
-        .map((session) =>
-          session.completedAt
-            .toISOString()
-            .split("T")[0]
-        )
+        .map((session) => session.completedAt.toISOString().split("T")[0]),
     ),
   ].sort();
 
@@ -186,17 +183,12 @@ export const buildStreaks = (reviewSessions) => {
     const previous = new Date(reviewDays[i - 1]);
     const current = new Date(reviewDays[i]);
 
-    const diffDays =
-      (current - previous) /
-      (1000 * 60 * 60 * 24);
+    const diffDays = (current - previous) / (1000 * 60 * 60 * 24);
 
     if (diffDays === 1) {
       runningStreak++;
 
-      bestStreak = Math.max(
-        bestStreak,
-        runningStreak
-      );
+      bestStreak = Math.max(bestStreak, runningStreak);
     } else {
       runningStreak = 1;
     }
@@ -210,9 +202,7 @@ export const buildStreaks = (reviewSessions) => {
   let cursor = new Date(today);
 
   while (true) {
-    const dateString = cursor
-      .toISOString()
-      .split("T")[0];
+    const dateString = cursor.toISOString().split("T")[0];
 
     if (!reviewDays.includes(dateString)) {
       break;

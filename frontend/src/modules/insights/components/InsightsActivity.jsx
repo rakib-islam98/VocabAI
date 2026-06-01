@@ -9,7 +9,7 @@ const InsightsActivity = ({ activity }) => {
     heatmap = [],
   } = activity || {};
 
-  const heatmapMap = new Map(heatmap.map((day) => [day.date, day.count]));
+  const heatmapMap = new Map(heatmap.map((day) => [day.date, day.level]));
 
   const today = new Date();
 
@@ -25,28 +25,24 @@ const InsightsActivity = ({ activity }) => {
     days.push({
       date: dateString,
 
-      count: heatmapMap.get(dateString) || 0,
+      level: heatmapMap.get(dateString) || 0,
     });
   }
 
-  const getIntensity = (count) => {
-    if (count === 0) {
-      return "bg-slate-200";
-    }
+  const getIntensity = (level) => {
+    switch (level) {
+      case 1:
+        return "bg-emerald-200"; // vocabulary only
 
-    if (count <= 5) {
-      return "bg-emerald-200";
-    }
+      case 2:
+        return "bg-emerald-400"; // review only
 
-    if (count <= 10) {
-      return "bg-emerald-400";
-    }
+      case 3:
+        return "bg-emerald-700"; // both
 
-    if (count <= 14) {
-      return "bg-emerald-500";
+      default:
+        return "bg-slate-200";
     }
-
-    return "bg-emerald-700";
   };
 
   return (
@@ -95,7 +91,7 @@ const InsightsActivity = ({ activity }) => {
         {/* LEFT SIDE */}
 
         <div
-            className="
+          className="
               flex
               flex-col
               justify-center
@@ -114,7 +110,7 @@ const InsightsActivity = ({ activity }) => {
               {days.map((day) => (
                 <div
                   key={day.date}
-                  title={`${day.date} • ${day.count} reviews`}
+                  title={day.date}
                   className={`
                     h-4
                     w-4
@@ -122,7 +118,7 @@ const InsightsActivity = ({ activity }) => {
                     transition-all
                     hover:scale-125
                     cursor-pointer
-                    ${getIntensity(day.count)}
+                    ${getIntensity(day.level)}
                   `}
                 />
               ))}
@@ -132,7 +128,7 @@ const InsightsActivity = ({ activity }) => {
           {/* LEGEND */}
 
           <div
-              className="
+            className="
                 mt-4
                 flex
                 items-center
@@ -142,15 +138,22 @@ const InsightsActivity = ({ activity }) => {
                 text-slate-500
               "
           >
-            <span>Less</span>
+            <div className="flex items-center gap-4 text-xs text-slate-500">
+              <div className="flex items-center gap-1">
+                <div className="h-3 w-3 rounded bg-emerald-200" />
+                <span>Added Words</span>
+              </div>
 
-            <div className="h-3 w-3 rounded bg-slate-100" />
-            <div className="h-3 w-3 rounded bg-emerald-200" />
-            <div className="h-3 w-3 rounded bg-emerald-400" />
-            <div className="h-3 w-3 rounded bg-emerald-500" />
-            <div className="h-3 w-3 rounded bg-emerald-700" />
+              <div className="flex items-center gap-1">
+                <div className="h-3 w-3 rounded bg-emerald-400" />
+                <span>Review</span>
+              </div>
 
-            <span>More</span>
+              <div className="flex items-center gap-1">
+                <div className="h-3 w-3 rounded bg-emerald-700" />
+                <span>Both</span>
+              </div>
+            </div>
           </div>
         </div>
 

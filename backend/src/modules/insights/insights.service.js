@@ -110,7 +110,10 @@ export const getInsightsService = async (userId) => {
   } = buildStreaks(reviewSessions);
 
   const heatmap =
-    buildActivityHeatmap(reviewAttempts);
+    buildActivityHeatmap(
+      reviewAttempts,
+      userWords
+    );
 
   const activeDays = heatmap.length;
 
