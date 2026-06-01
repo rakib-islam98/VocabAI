@@ -77,6 +77,7 @@ export default function ResetPasswordPage() {
             type="password"
             autoComplete="new-password"
             placeholder="Confirm password"
+            hidePasswordToggle={true}
             error={errors.confirmPassword?.message}
             {...register("confirmPassword")}
           />
