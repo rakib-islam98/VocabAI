@@ -4,6 +4,8 @@ import LandingPage from "../pages/LandingPage";
 
 import LoginPage from "../modules/auth/pages/LoginPage";
 import RegisterPage from "../modules/auth/pages/RegisterPage";
+import ForgotPasswordPage from "../modules/auth/pages/ForgotPasswordPage";
+import ResetPasswordPage from "../modules/auth/pages/ResetPasswordPage";
 
 import VocabularyPage from "../modules/vocabulary/pages/VocabularyPage";
 
@@ -73,11 +75,31 @@ export const router = createBrowserRouter([
   },
 
   {
+  path: "/reset-password/:token",
+
+    element: (
+      <GuestRoute>
+        <ResetPasswordPage />
+      </GuestRoute>
+    ),
+  },
+
+  {
     path: "/login",
 
     element: (
       <GuestRoute>
         <LoginPage />
+      </GuestRoute>
+    ),
+  },
+
+  {
+    path: "/forgot-password",
+
+    element: (
+      <GuestRoute>
+        <ForgotPasswordPage />
       </GuestRoute>
     ),
   },

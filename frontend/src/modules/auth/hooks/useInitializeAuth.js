@@ -18,8 +18,6 @@ export default function useInitializeAuth() {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    console.log("Auth initializer started");
-
     const initializeAuth = async () => {
       try {
         const user = await getCurrentUser();
@@ -39,10 +37,5 @@ export default function useInitializeAuth() {
     };
 
     initializeAuth();
-  }, [
-    setUser,
-    logout,
-    finishInitializing,
-    queryClient,
-  ]);
+  }, [setUser, logout, finishInitializing, queryClient]);
 }

@@ -24,6 +24,7 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
@@ -46,7 +47,11 @@ export default function LoginPage() {
 
   return (
     <AuthLayout>
-      <form  autoComplete="on" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form
+        autoComplete="on"
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-6"
+      >
         <div>
           <h1 className="text-3xl font-semibold">Welcome Back</h1>
 
@@ -75,6 +80,18 @@ export default function LoginPage() {
             error={errors.password?.message}
             {...register("password")}
           />
+
+          <div className="flex justify-end">
+            <Link
+              to="/forgot-password"
+              state={{
+                email: watch("email"),
+              }}
+              className="text-sm text-slate-600 hover:text-slate-900"
+            >
+              Forgot password?
+            </Link>
+          </div>
 
           <Button type="submit" loading={loginMutation.isPending}>
             Login

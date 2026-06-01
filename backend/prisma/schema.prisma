@@ -17,6 +17,10 @@ model User {
   email    String @unique
   password String
 
+  resetPasswordToken    String?
+  resetPasswordExpires  DateTime?
+
+
   userWords      UserWord[]
   reviewSessions ReviewSession[]
   reviewAttempts ReviewAttempt[]
